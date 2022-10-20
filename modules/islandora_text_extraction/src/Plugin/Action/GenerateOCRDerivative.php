@@ -38,6 +38,7 @@ class GenerateOCRDerivative extends AbstractGenerateDerivative {
     $form['mimetype']['#type'] = 'textfield';
 
     unset($form['args']);
+    unset($form['inputargs']);
     return $form;
   }
 
