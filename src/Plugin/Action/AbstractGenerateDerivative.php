@@ -21,6 +21,7 @@ class AbstractGenerateDerivative extends AbstractGenerateDerivativeBase {
       'source_term_uri' => '',
       'derivative_term_uri' => '',
       'mimetype' => '',
+      'inputargs' => '',
       'args' => '',
       'destination_media_type' => '',
       'scheme' => $this->config->get('default_scheme'),
@@ -130,6 +131,13 @@ class AbstractGenerateDerivative extends AbstractGenerateDerivativeBase {
       '#rows' => '8',
       '#description' => $this->t('Mimetype to convert to (e.g. image/jpeg, video/mp4, etc...)'),
     ];
+    $form['inputargs'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Additional input arguments'),
+      '#default_value' => $this->configuration['inputargs'],
+      '#rows' => '8',
+      '#description' => $this->t('Additional command line options related to the source file'),
+    ];
     $form['args'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Additional arguments'),
@@ -199,6 +207,7 @@ class AbstractGenerateDerivative extends AbstractGenerateDerivativeBase {
     $this->configuration['derivative_term_uri'] = $this->utils->getUriForTerm($term);
 
     $this->configuration['mimetype'] = $form_state->getValue('mimetype');
+    $this->configuration['inputargs'] = $form_state->getValue('inputargs');
     $this->configuration['args'] = $form_state->getValue('args');
     $this->configuration['scheme'] = $form_state->getValue('scheme');
     $this->configuration['path'] = trim($form_state->getValue('path'), '\\/');
