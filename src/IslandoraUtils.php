@@ -218,6 +218,41 @@ class IslandoraUtils {
       ->loadMultiple($query->execute());
   }
 
+  public function getEntityDisplayUrl(NodeInterface $node) {
+        
+    // Return a display url for a given node.  
+    // By default we return Drupal's default URL ($node->toUrl())
+    // But for Page nodes, we return the URL to the parent record, with a query string parameter added:
+    // E.g. https://islandora.traefik.me/node/103?initialPage=2
+    // The initialPage parameter is passed to instruct the viewer on the parent node which child node 
+    // (Page) to display initially.
+
+    // is this node a Repository Item with Model = Page?
+    if (!$node->hasField(self::MODEL_FIELD)) {
+        return $node->toUrl();
+    }
+    $term = $this->getTermForUri('http://id.loc.gov/ontologies/bibframe/part');
+    $model = $node->get(self::MODEL_FIELD)->getvalue();
+    if (!isset($model[0]['target_id']) || $model[0]['target_id'] != $term->id()) {
+        return $node->toUrl();
+    }
+
+    $value = $node->get('field_member_of')->getvalue();
+    $initial_page = '';
+    if (isset($value[0]['target_id'])) {
+        $index = $node->get('index_within_parent')->getvalue();
+        if (!empty($index)) {
+            $index = $index[0]['value'];
+            $parent_id = $value['0']['target_id'];
+            $parent = $this->entityTypeManager->getStorage('node')->load($parent_id);
+            if ($parent != NULL) {
+                return $parent->toUrl('canonical', ['query' => ['initialPage' => $index]]);
+            }
+        }
+    }
+    return $node->toUrl();
+  }
+
   /**
    * Gets the taxonomy term associated with an external uri.
    *

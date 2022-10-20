@@ -3,6 +3,7 @@
 /**
  * @file
  * Provide Views data for integer-weight fields.
+ * Provide Views data for index_within_parent field
  */
 
 /**
@@ -22,4 +23,13 @@ function islandora_views_data_alter(&$data) {
       $data['node__' . $field][$field]['field']['id'] = 'integer_weight_selector';
     }
   }
+
+  // Add index_within_parent computed field
+  $data['node']['index_within_parent'] = [
+      'title' => t('Index within Parent'),
+      'group' => t('Content'),
+      'field' => [
+        'id' => 'index_within_parent',
+      ],
+  ];
 }

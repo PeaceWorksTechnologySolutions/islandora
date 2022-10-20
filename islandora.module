@@ -17,16 +17,18 @@
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
-use Drupal\islandora\Form\IslandoraSettingsForm;
 use Drupal\node\NodeInterface;
 use Drupal\media\MediaInterface;
 use Drupal\file\FileInterface;
 use Drupal\taxonomy\TermInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\serialization\Normalizer\CacheableNormalizerInterface;
+use Drupal\islandora\Form\IslandoraSettingsForm;
+use Drupal\islandora\Field\IndexWithinParentField;
 
 /**
  * Implements hook_help().
@@ -310,6 +312,9 @@ function islandora_preprocess_node(&$variables) {
   if (node_is_page($variables['elements']['#node'])) {
     $variables['page'] = TRUE;
   }
+
+  $utils = \Drupal::service('islandora.utils');
+  $variables['url'] = $utils->getEntityDisplayUrl($variables['node'])->toString();
 }
 
 /**
@@ -537,3 +542,25 @@ function islandora_preprocess_views_view_table(&$variables) {
     }
   }
 }
+
+
+/**
+ * Implements hook_entity_bundle_field_info
+ */
+function islandora_entity_bundle_field_info($entity_type, $bundle, array $base_field_definitions) {
+    $fields = [];
+    if ($entity_type->id() == 'node' && $bundle == 'islandora_object') {
+        
+        // Create a new field whose value is computed.
+        $fields['index_within_parent'] = BaseFieldDefinition::create('integer')
+            ->setLabel(t('Index within parent node'))
+            ->setComputed(TRUE)
+            ->setClass(IndexWithinParentField::class)
+            ->setDisplayConfigurable('view', TRUE)
+            ->setDisplayOptions('view', [
+                'region' => 'hidden',
+            ]);
+    }
+    return $fields;
+}
+

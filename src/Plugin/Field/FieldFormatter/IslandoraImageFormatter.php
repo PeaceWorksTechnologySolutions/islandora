@@ -124,7 +124,7 @@ class IslandoraImageFormatter extends ImageFormatter {
       return $elements;
     }
 
-    $url = $node->toUrl();
+    $url = $this->utils->getEntityDisplayUrl($node);
 
     foreach ($elements as &$element) {
       $element['#url'] = $url;
