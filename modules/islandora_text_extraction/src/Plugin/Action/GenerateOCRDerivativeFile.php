@@ -58,7 +58,6 @@ class GenerateOCRDerivativeFile extends AbstractGenerateDerivativeMediaFile {
     $form = array_merge($first, $middle, $last);
 
     unset($form['args']);
-    unset($form['inputargs']);
     return $form;
   }
 

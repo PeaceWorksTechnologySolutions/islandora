@@ -36,7 +36,6 @@ class GenerateAudioDerivative extends AbstractGenerateDerivative {
     $form = parent::buildConfigurationForm($form, $form_state);
     $form['mimetype']['#description'] = $this->t('Mimetype to convert to (e.g. audio/mpeg, audio/m4a, etc...)');
     $form['args']['#description'] = $this->t('Additional command line parameters for FFMpeg');
-    unset($form['inputargs']);
     return $form;
   }
 

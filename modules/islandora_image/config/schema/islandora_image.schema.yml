@@ -23,6 +23,9 @@ action.configuration.generate_image_derivative:
     args:
       type: text
       label: 'Convert Arguments'
+    inputargs:
+      type: text
+      label: 'Input arguments for convert'
     scheme:
       type: text
       label: 'Flysystem scheme'
