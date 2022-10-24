@@ -43,7 +43,6 @@ class GenerateImageDerivativeFile extends AbstractGenerateDerivativeMediaFile {
     $form['args']['#title'] = $this->t('Additional output arguments');
     $form['args']['#description'] = $this->t('Additional output options for ImageMagick convert (e.g. -resize 50% -unsharp 0x.5).<br>See <a target="_blank" href="https://imagemagick.org/script/convert.php">documentation</a> for available options.');
 
-
     $new = [
       'inputargs' => [
         '#type' => 'textfield',
@@ -54,6 +53,7 @@ class GenerateImageDerivativeFile extends AbstractGenerateDerivativeMediaFile {
       ]
     ];
     $form = $this->utils->array_insert_after($form, 'mimetype', $new);
+
     return $form;
   }
 

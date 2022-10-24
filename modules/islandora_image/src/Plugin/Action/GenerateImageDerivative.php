@@ -49,8 +49,6 @@ class GenerateImageDerivative extends AbstractGenerateDerivative {
       ]
     ];
     $form = $this->utils->array_insert_after($form, 'mimetype', $new);
-
-
     return $form;
   }
 
