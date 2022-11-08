@@ -218,6 +218,54 @@ class IslandoraUtils {
       ->loadMultiple($query->execute());
   }
 
+  public function getEntityDisplayUrl(NodeInterface $node) {
+        
+    // Return a display url for a given node.  
+    // By default we return Drupal's default URL ($node->toUrl())
+    
+    // But for Page nodes, we return the URL to the parent record, with a query string parameter added:
+    // E.g. https://islandora.traefik.me/node/103?initialPage=2
+    // The initialPage parameter is passed to instruct the viewer on the parent node which child node 
+    // (Page) to display initially.
+    
+    // If the current HTML page has a `search_api_fulltext parameter`,
+    // we also append query string parameter 'highlight', passing the same value,
+    // in order to be able to highlight where search terms are found.
+    // (This is done for any repository item entity).
+
+    // is this node a Repository Item with Model = Page?
+    if (!$node->hasField(self::MODEL_FIELD)) {
+        return $node->toUrl();
+    }
+
+    $query = [];
+    if (isset($_GET['search_api_fulltext'])) {
+        $query['highlight'] = $_GET['search_api_fulltext'];
+    }
+
+    $term = $this->getTermForUri('http://id.loc.gov/ontologies/bibframe/part');
+    $model = $node->get(self::MODEL_FIELD)->getvalue();
+    if (!isset($model[0]['target_id']) || $model[0]['target_id'] != $term->id()) {
+        return $node->toUrl('canonical', ['query' => $query]);
+    }
+
+    $value = $node->get('field_member_of')->getvalue();
+    $initial_page = '';
+    if (isset($value[0]['target_id'])) {
+        $index = $node->get('index_within_parent')->getvalue();
+        if (!empty($index)) {
+            $index = $index[0]['value'];
+            $parent_id = $value['0']['target_id'];
+            $parent = $this->entityTypeManager->getStorage('node')->load($parent_id);
+            if ($parent != NULL) {
+                $query['initialPage'] = $index;
+                return $parent->toUrl('canonical', ['query' => $query]);
+            }
+        }
+    }
+    return $node->toUrl('canonical', ['query' => $query]);
+  }
+
   /**
    * Gets the taxonomy term associated with an external uri.
    *
