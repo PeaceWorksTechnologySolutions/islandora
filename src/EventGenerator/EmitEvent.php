@@ -19,6 +19,8 @@ use Stomp\StatefulStomp;
 use Stomp\Transport\Message;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\VarDumper\Cloner\VarCloner;        
+use Symfony\Component\VarDumper\Dumper\CliDumper;        
 
 /**
  * Configurable action base for actions that publish messages to queues.
@@ -209,6 +211,14 @@ abstract class EmitEvent extends ConfigurableActionBase implements ContainerFact
         )
       );
     }
+    \Drupal::logger('islandora')->info('emitted event: '. $this->configuration['queue']);
+
+    $cloner = new VarCloner();                                   
+    $dumper = new CliDumper();                                   
+    $output = $dumper->dump($cloner->cloneVar($message), true);   
+    error_log($output);
+
+
   }
 
   /**
