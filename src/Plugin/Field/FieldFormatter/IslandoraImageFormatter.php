@@ -124,12 +124,15 @@ class IslandoraImageFormatter extends ImageFormatter {
       return $elements;
     }
 
-    $url = $node->toUrl();
+    $url = $this->utils->getEntityDisplayUrl($node);
 
     foreach ($elements as &$element) {
       $element['#url'] = $url;
     }
-
+    
+    // don't cache these elements, because we want to recalculate the URLs based on 
+    // current search terms.
+    $elements['#cache']['max-age'] = 0;
     return $elements;
   }
 
