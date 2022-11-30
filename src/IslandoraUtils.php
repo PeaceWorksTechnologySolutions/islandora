@@ -799,4 +799,26 @@ class IslandoraUtils {
     return $parents;
   }
 
+  /**
+    * Insert a value or key/value pair after a specific key in an array.  If key doesn't exist, value is appended
+    * to the end of the array.
+    *
+    * This is not islandora specific, but a useful function that neither PHP nor Drupal provide.
+    * (is there still hope after 16 years?  https://www.drupal.org/project/drupal/issues/66183 )
+    *
+    * @param array $array
+    * @param string $key
+    * @param array $new
+    *
+    * @return array
+    *
+    * Credit: https://gist.github.com/wpscholar/0deadce1bbfa4adb4e4c
+    */
+  function array_insert_after( array $array, $key, array $new ) {
+	$keys = array_keys( $array );
+	$index = array_search( $key, $keys );
+	$pos = false === $index ? count( $array ) : $index + 1;
+	return array_merge( array_slice( $array, 0, $pos ), $new, array_slice( $array, $pos ) );
+  }
+
 }

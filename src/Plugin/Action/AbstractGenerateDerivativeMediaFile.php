@@ -27,6 +27,7 @@ class AbstractGenerateDerivativeMediaFile extends AbstractGenerateDerivativeBase
       'event' => 'Generate Derivative',
       'source_term_uri' => $uri,
       'mimetype' => '',
+      'inputargs' => '',
       'args' => '',
       'path' => '[date:custom:Y]-[date:custom:m]/[media:mid].bin',
       'source_field_name' => 'field_media_file',
@@ -69,6 +70,7 @@ class AbstractGenerateDerivativeMediaFile extends AbstractGenerateDerivativeBase
     $allowed = [
       'queue',
       'event',
+      'inputargs',
       'args',
       'source_uri',
       'destination_uri',
@@ -109,12 +111,20 @@ class AbstractGenerateDerivativeMediaFile extends AbstractGenerateDerivativeBase
       '#description' => $this->t('File field on Media Type to hold derivative.  Cannot be the same as source'),
     ];
 
+    $form['inputargs'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Additional input arguments'),
+      '#default_value' => $this->configuration['inputargs'],
+      '#rows' => '8',
+      '#description' => $this->t('Additional command line options related to the source file'),
+    ];
+
     $form['args'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Additional arguments'),
+      '#title' => $this->t('Additional output arguments'),
       '#default_value' => $this->configuration['args'],
       '#rows' => '8',
-      '#description' => $this->t('Additional command line arguments'),
+      '#description' => $this->t('Additional command line options related to the output file (derivative)'),
     ];
 
     $form['mimetype'] = [
@@ -170,6 +180,7 @@ class AbstractGenerateDerivativeMediaFile extends AbstractGenerateDerivativeBase
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::submitConfigurationForm($form, $form_state);
     $this->configuration['mimetype'] = $form_state->getValue('mimetype');
+    $this->configuration['inputargs'] = $form_state->getValue('inputargs');
     $this->configuration['args'] = $form_state->getValue('args');
     $this->configuration['scheme'] = $form_state->getValue('scheme');
     $this->configuration['path'] = trim($form_state->getValue('path'), '\\/');
