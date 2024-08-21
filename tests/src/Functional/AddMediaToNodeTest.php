@@ -3,7 +3,7 @@
 namespace Drupal\Tests\islandora\Functional;
 
 use Drupal\Core\Url;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 
 /**
  * Tests the RelatedLinkHeader view alter.
@@ -12,7 +12,7 @@ use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
  */
 class AddMediaToNodeTest extends IslandoraFunctionalTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
    * Node to hold the media.
@@ -31,7 +31,7 @@ class AddMediaToNodeTest extends IslandoraFunctionalTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
     $this->node = $this->container->get('entity_type.manager')->getStorage('node')->create([

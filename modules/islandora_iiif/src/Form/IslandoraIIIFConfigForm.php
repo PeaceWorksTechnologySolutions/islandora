@@ -66,13 +66,37 @@ class IslandoraIIIFConfigForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    $options = [
+      'none' => $this->t('None'),
+      'view' => $this->t("From view title"),
+      'node' => $this->t("From node title"),
+    ];
     $config = $this->config('islandora_iiif.settings');
     $form['iiif_server'] = [
       '#type' => 'url',
       '#title' => $this->t('IIIF Image server location'),
       '#description' => $this->t('Please enter the image server location without trailing slash. e.g. http://www.example.org/iiif/2.'),
       '#default_value' => $config->get('iiif_server'),
+      '#config' => [
+        'key' => 'islandora_iiif.settings:iiif_server',
+      ],
     ];
+
+    $form['use_relative_paths'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t("Use relative file paths in manifest."),
+      '#description' => $this->t("Check this if your IIIF Server is configured to access files locally. If unchecked, the absolute URL will be given and the IIIF server will make requests to this site to retrieve images."),
+      '#default_value' => $config->get('use_relative_paths'),
+    ];
+
+    $form['show_title'] = [
+      '#type' => 'select',
+      '#options' => $options,
+      '#title' => $this->t("Show title in viewer."),
+      '#description' => $this->t("Show title on your viewer, if viewer allows"),
+      '#default_value' => $config->get('show_title'),
+    ];
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -99,6 +123,8 @@ class IslandoraIIIFConfigForm extends ConfigFormBase {
 
     $this->config('islandora_iiif.settings')
       ->set('iiif_server', $form_state->getValue('iiif_server'))
+      ->set('use_relative_paths', $form_state->getValue('use_relative_paths'))
+      ->set('show_title', $form_state->getValue('show_title'))
       ->save();
   }
 

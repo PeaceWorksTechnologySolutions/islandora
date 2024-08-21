@@ -14,6 +14,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\islandora\Event\StompHeaderEvent;
 use Drupal\islandora\Event\StompHeaderEventException;
+use Drupal\islandora\Exception\IslandoraDerivativeException;
 use Stomp\Exception\StompException;
 use Stomp\StatefulStomp;
 use Stomp\Transport\Message;
@@ -159,14 +160,18 @@ abstract class EmitEvent extends ConfigurableActionBase implements ContainerFact
       $data = $this->generateData($entity);
 
       $event = $this->eventDispatcher->dispatch(
-        StompHeaderEvent::EVENT_NAME,
-        new StompHeaderEvent($entity, $user, $data, $this->getConfiguration())
+        new StompHeaderEvent($entity, $user, $data, $this->getConfiguration()),
+        StompHeaderEvent::EVENT_NAME
       );
 
       $message = new Message(
         $this->eventGenerator->generateEvent($entity, $user, $data),
         $event->getHeaders()->all()
       );
+    }
+    catch (IslandoraDerivativeException $e) {
+      $this->logger->info($e->getMessage());
+      return;
     }
     catch (StompHeaderEventException $e) {
       $this->logger->error($e->getMessage());

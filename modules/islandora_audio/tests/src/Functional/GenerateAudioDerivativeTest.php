@@ -40,7 +40,7 @@ class GenerateAudioDerivativeTest extends GenerateDerivativeTestBase {
     // Create an action to generate a audio derivative.
     $this->drupalGet('admin/config/system/actions');
     $this->getSession()->getPage()->findById("edit-action")->selectOption("Generate a audio derivative");
-    $this->getSession()->getPage()->pressButton($this->t('Create'));
+    $this->getSession()->getPage()->pressButton('Create');
     $this->assertSession()->statusCodeEquals(200);
 
     $this->getSession()->getPage()->fillField('edit-label', "Generate audio test derivative");
@@ -53,7 +53,7 @@ class GenerateAudioDerivativeTest extends GenerateDerivativeTestBase {
     $this->getSession()->getPage()->fillField('edit-args', "-f mp3");
     $this->getSession()->getPage()->fillField('edit-scheme', "public");
     $this->getSession()->getPage()->fillField('edit-path', "derp.mov");
-    $this->getSession()->getPage()->pressButton($this->t('Save'));
+    $this->getSession()->getPage()->pressButton('Save');
     $this->assertSession()->statusCodeEquals(200);
 
     // Create a context and add the action as a derivative reaction.
@@ -66,9 +66,10 @@ class GenerateAudioDerivativeTest extends GenerateDerivativeTestBase {
       'name[0][value]' => 'Test Media',
       'files[field_media_file_0]' => __DIR__ . '/../../fixtures/test_file.txt',
       'field_media_of[0][target_id]' => 'Test Node',
-      'field_tags[0][target_id]' => 'Preservation Master',
+      'field_media_use[0][target_id]' => $this->preservationMasterTerm->label(),
     ];
-    $this->drupalPostForm('media/add/' . $this->testMediaType->id(), $values, $this->t('Save'));
+    $this->drupalGet('media/add/' . $this->testMediaType->id());
+    $this->submitForm($values, 'Save');
 
     $expected = [
       'source_uri' => 'test_file.txt',

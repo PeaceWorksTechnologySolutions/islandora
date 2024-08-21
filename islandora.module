@@ -16,17 +16,18 @@
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
-use Drupal\islandora\Form\IslandoraSettingsForm;
-use Drupal\node\NodeInterface;
-use Drupal\media\MediaInterface;
 use Drupal\file\FileInterface;
-use Drupal\taxonomy\TermInterface;
-use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\islandora\Form\IslandoraSettingsForm;
+use Drupal\media\MediaInterface;
+use Drupal\node\NodeInterface;
 use Drupal\serialization\Normalizer\CacheableNormalizerInterface;
+use Drupal\taxonomy\TermInterface;
 
 /**
  * Implements hook_help().
@@ -181,7 +182,8 @@ function islandora_file_insert(FileInterface $file) {
  */
 function islandora_file_update(FileInterface $file) {
   // Exit early if unchanged.
-  if ($file->filehash != NULL && $file->original->filehash != NULL && $file->filehash['sha1'] == $file->original->filehash['sha1']) {
+  if ($file->hasField('sha1') && $file->original->hasField('sha1')
+    && $file->sha1->getString() == $file->original->sha1->getString()) {
     return;
   }
 
@@ -329,19 +331,120 @@ function islandora_form_alter(&$form, FormStateInterface $form_state, $form_id) 
       if ($node) {
         $form['name']['widget'][0]['value']['#default_value'] = $node->getTitle();
       }
+      $form['actions']['submit']['#submit'][] = 'islandora_media_custom_form_submit';
+    }
+  }
+
+  $form_object = $form_state->getFormObject();
+  $utils = \Drupal::service('islandora.utils');
+  $config = \Drupal::config('islandora.settings')->get('delete_media_and_files');
+
+  if ($config == 1 && $form_object instanceof EntityForm) {
+    $entity = $form_object->getEntity();
+
+    if ($entity->getEntityTypeId() == "node" && $utils->isIslandoraType($entity->getEntityTypeId(), $entity->bundle()) && strpos($form['#form_id'], 'delete_form') !== FALSE) {
+      $medias = $utils->getMedia($form_state->getFormObject()->getEntity());
+      if (count($medias) != 0) {
+        $form['delete_associated_content'] = [
+          '#type' => 'checkbox',
+          '#title' => t('Delete all associated medias and nodes'),
+        ];
+
+        $media_list = [];
+
+        foreach ($medias as $media) {
+          $media_list[] = $media->getName();
+        }
+
+        $form['container'] = [
+          '#type' => 'container',
+          '#states' => [
+            'visible' => [
+              ':input[name="delete_associated_content"]' => ['checked' => TRUE],
+            ],
+          ],
+        ];
+
+        $form['container']['media_items'] = [
+          '#theme' => 'item_list',
+          '#type' => 'ul',
+          '#items' => $media_list,
+          '#attributes' => ['class' => ['islandora-media-items']],
+          '#wrapper_attributes' => ['class' => ['container']],
+          '#attached' => [
+            'library' => [
+              'islandora/islandora',
+            ],
+          ],
+        ];
+
+        $form['actions']['submit']['#submit'][] = 'islandora_object_delete_form_submit';
+        return $form;
+      }
+    }
+  }
+
+  return $form;
+}
+
+/**
+ * Redirect submit handler for media save.
+ */
+function islandora_media_custom_form_submit(&$form, FormStateInterface $form_state) {
+  // Check configuration to see whether a redirect is desired.
+  $redirect = \Drupal::config('islandora.settings')->get('redirect_after_media_save');
+  if ($redirect) {
+    $params = \Drupal::request()->query->all();
+    if (!empty($params)) {
+      $target_id = $params['edit']['field_media_of']['widget'][0]['target_id'];
+      $url = Url::fromRoute('view.media_of.page_1', ['node' => $target_id]);
+      $form_state->setRedirectUrl($url);
     }
   }
 }
 
 /**
- * Implements hook_field_widget_WIDGET_TYPE_form_alter().
+ * Implements a submit handler for the delete form.
  */
-function islandora_field_widget_image_image_form_alter(&$element, $form_state, $context) {
+function islandora_object_delete_form_submit($form, FormStateInterface $form_state) {
+  $result = $form_state->getValues('delete_associated_content');
+  if ($result['delete_associated_content'] == 1) {
+    $utils = \Drupal::service('islandora.utils');
+    $node = $form_state->getFormObject()->getEntity();
+    $medias = $utils->getMedia($node);
+    $results = $utils->deleteMediaAndFiles($medias);
+    $logger = \Drupal::logger('logger.channel.islandora');
+    $messenger = \Drupal::messenger();
+    if (isset($results['inaccessible'])) {
+      $messenger->addWarning($results['inaccessible']);
+    }
+    $logger->notice($results['deleted']);
+    $build = [
+      'heading' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => t("The repository item @node and @media", [
+          '@node' => $node->getTitle(),
+          '@media' => $results['deleted'],
+        ]),
+      ],
+    ];
+
+    $message = \Drupal::service('renderer')->renderPlain($build);
+    $messenger->deleteByType('status');
+    $messenger->addStatus($message);
+  }
+}
+
+/**
+ * Implements hook_field_widget_single_element_WIDGET_TYPE_form_alter().
+ */
+function islandora_field_widget_single_element_image_image_form_alter(&$element, $form_state, $context) {
   $element['#process'][] = 'islandora_add_default_image_alt_text';
 }
 
 /**
- * Callback for hook_field_widget_WIDGET_TYPE_form_alter().
+ * Callback for hook_field_widget_single_element_WIDGET_TYPE_form_alter().
  */
 function islandora_add_default_image_alt_text($element, $form_state, $form) {
   if ($element['alt']['#access']) {
@@ -404,6 +507,7 @@ function islandora_form_block_form_alter(&$form, FormStateInterface $form_state,
   unset($form['visibility']['media_is_islandora_media']);
   unset($form['visibility']['media_uses_filesystem']);
   unset($form['visibility']['node_had_namespace']);
+  unset($form['visibility']['node_has_ancestor']);
   unset($form['visibility']['node_has_parent']);
   unset($form['visibility']['node_has_term']);
   unset($form['visibility']['node_is_islandora_object']);
@@ -441,12 +545,11 @@ function islandora_entity_view(array &$build, EntityInterface $entity, EntityVie
   $route_match_item = \Drupal::routeMatch()->getParameters()->get($entity->getEntityTypeId());
   // Ensure the entity matches the route.
   if ($entity === $route_match_item) {
-    if ($display->getComponent('field_gemini_uri')) {
-      $mapper = \Drupal::service('islandora.entity_mapper');
-      $flysystem_config = Settings::get('flysystem');
-      $fedora_root = $flysystem_config['fedora']['config']['root'];
+    $flysystem_config = Settings::get('flysystem');
+    $fedora_root = $flysystem_config['fedora']['config']['root'] ?? NULL;
+    if ($display->getComponent('field_gemini_uri') && $fedora_root) {
       $fedora_root = rtrim($fedora_root, '/');
-
+      $mapper = \Drupal::service('islandora.entity_mapper');
       if ($entity->getEntityTypeId() == 'media') {
         // Check if the source file is in Fedora or not.
         $media_source_service = \Drupal::service('islandora.media_source_service');
@@ -515,7 +618,7 @@ function islandora_preprocess_views_view_table(&$variables) {
 
   // Check for a weight selector field.
   foreach ($variables['view']->field as $field_key => $field) {
-    if ($field->options['plugin_id'] == 'integer_weight_selector') {
+    if ($field->getPluginId() == 'integer_weight_selector') {
 
       // Check if the weight selector is on the first column.
       $is_first_column = array_search($field_key, array_keys($variables['view']->field)) > 0 ? FALSE : TRUE;

@@ -2,13 +2,13 @@
 
 namespace Drupal\islandora\EventGenerator;
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Site\Settings;
 use Drupal\islandora\IslandoraUtils;
 use Drupal\islandora\MediaSource\MediaSourceService;
 use Drupal\user\UserInterface;
-use Drupal\Core\Site\Settings;
-use Drupal\media\Entity\Media;
-use Drupal\Core\Entity\EntityStorageInterface;
 
 /**
  * The default EventGenerator implementation.
@@ -147,8 +147,19 @@ class EventGenerator implements EventGeneratorInterface {
       }
     }
 
-    unset($data["event"]);
-    unset($data["queue"]);
+    $allowed_keys = [
+      "file_upload_uri",
+      "fedora_uri",
+      "source_uri",
+      "destination_uri",
+      "args",
+      "mimetype",
+      "source_field",
+    ];
+    $keys_to_unset = array_diff(array_keys($data), $allowed_keys);
+    foreach ($keys_to_unset as $key) {
+      unset($data[$key]);
+    }
 
     if (!empty($data)) {
       $event["attachment"] = [
@@ -175,25 +186,26 @@ class EventGenerator implements EventGeneratorInterface {
       $revision_ids = \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId())->revisionIds($entity);
       return count($revision_ids) > 1;
     }
-    elseif ($entity->getEntityTypeId() == "media") {
-      $mediaStorage = \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId());
-      return count($this->getRevisionIds($entity, $mediaStorage)) > 1;
+    elseif (in_array($entity->getEntityTypeId(), ["media", "taxonomy_term"])) {
+      $entity_storage = \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId());
+      return count($this->getRevisionIds($entity, $entity_storage)) > 1;
     }
   }
 
   /**
-   * Method to get the revisionIds of a media object.
+   * Method to get the revisionIds of an entity.
    *
-   * @param \Drupal\media\Entity\Media $media
-   *   Media object.
-   * @param \Drupal\Core\Entity\EntityStorageInterface $media_storage
-   *   Media Storage.
+   * @param \Drupal\entity\Entity\ContentEntityInterface $entity
+   *   Entity instance such as a Media or Taxonomy term.
+   * @param \Drupal\Core\Entity\EntityStorageInterface $entity_storage
+   *   Entity Storage.
    */
-  protected function getRevisionIds(Media $media, EntityStorageInterface $media_storage) {
-    $result = $media_storage->getQuery()
+  protected function getRevisionIds(ContentEntityInterface $entity, EntityStorageInterface $entity_storage) {
+    $result = $entity_storage->getQuery()
       ->allRevisions()
-      ->condition($media->getEntityType()->getKey('id'), $media->id())
-      ->sort($media->getEntityType()->getKey('revision'), 'DESC')
+      ->accessCheck(TRUE)
+      ->condition($entity->getEntityType()->getKey('id'), $entity->id())
+      ->sort($entity->getEntityType()->getKey('revision'), 'DESC')
       ->execute();
     return array_keys($result);
   }

@@ -59,8 +59,8 @@ class IslandoraImageFormatterTest extends IslandoraFunctionalTestBase {
       'uri' => "public://test.jpeg",
       'filename' => "test.jpeg",
       'filemime' => "image/jpeg",
-      'status' => FILE_STATUS_PERMANENT,
     ]);
+    $file->setPermanent();
     $file->save();
 
     // Make the media, and associate it with the image and node.
@@ -92,7 +92,7 @@ class IslandoraImageFormatterTest extends IslandoraFunctionalTestBase {
         ':title' => 'Some Title',
       ]
     );
-    $this->assertEqual(count($elements), 1, 'Image linked to content formatter displaying points to Node and not Media.');
+    $this->assertEquals(count($elements), 1, 'Image linked to content formatter displaying points to Node and not Media.');
   }
 
 }

@@ -16,7 +16,7 @@ class DeleteMediaTest extends IslandoraFunctionalTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'media_test_views',
     'context_ui',
     'field_ui',
@@ -47,11 +47,13 @@ class DeleteMediaTest extends IslandoraFunctionalTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
+    $permissions = ['create media', 'delete any media', 'delete any file'];
+
     // Create a test user.
-    $this->account = $this->createUser(['create media', 'delete any media']);
+    $this->account = $this->createUser($permissions);
 
     list($this->file, $this->media) = $this->makeMediaAndFile($this->account);
   }
@@ -86,7 +88,7 @@ class DeleteMediaTest extends IslandoraFunctionalTestBase {
     $this->assertSession()->pageTextContains('Are you sure you want to delete this media and associated files?');
     $page->pressButton('Delete');
     // Should assert that a media and file were deleted.
-    $this->assertSession()->pageTextContains('Deleted 2 items.');
+    $this->assertSession()->pageTextContains("The media with the id $mid has been deleted");
 
     // Attempt to reload the entities.
     // Both media and file should be gone.

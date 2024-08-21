@@ -26,7 +26,7 @@ class ViewModeAlterReactionTest extends IslandoraFunctionalTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
     // Node to be referenced via member of.
@@ -75,7 +75,7 @@ class ViewModeAlterReactionTest extends IslandoraFunctionalTestBase {
 
     $this->drupalGet("admin/structure/context/test/reaction/add/view_mode_alter");
     $this->getSession()->getPage()->findById("edit-reactions-view-mode-alter-mode")->selectOption('node.teaser');
-    $this->getSession()->getPage()->pressButton($this->t('Save and continue'));
+    $this->getSession()->getPage()->pressButton('Save and continue');
     $this->assertSession()->statusCodeEquals(200);
 
     drupal_flush_all_caches();

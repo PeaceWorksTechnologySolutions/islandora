@@ -19,7 +19,7 @@ class DerivativeReactionTest extends IslandoraFunctionalTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
     $this->node = $this->container->get('entity_type.manager')->getStorage('node')->create([
@@ -52,7 +52,8 @@ class DerivativeReactionTest extends IslandoraFunctionalTestBase {
       'files[field_media_file_0]' => __DIR__ . '/../../fixtures/test_file.txt',
       'field_media_of[0][target_id]' => 'Test Node',
     ];
-    $this->drupalPostForm('media/add/' . $this->testMediaType->id(), $values, $this->t('Save'));
+    $this->drupalGet('media/add/' . $this->testMediaType->id());
+    $this->submitForm($values, 'Save');
 
     // field_media_of is set and there's a file, so derivatives should fire.
     $this->assertSession()->pageTextContains("Hello World!");
@@ -70,9 +71,9 @@ class DerivativeReactionTest extends IslandoraFunctionalTestBase {
       'files[field_media_file_0]' => __DIR__ . '/../../fixtures/test_file2.txt',
     ];
     $this->drupalGet($media_url . '/edit');
-    $this->getSession()->getPage()->pressButton($this->t('Remove'));
+    $this->getSession()->getPage()->pressButton('Remove');
     $this->getSession()->getPage()->fillField('files[field_media_file_0]', __DIR__ . '/../../fixtures/test_file2.txt');
-    $this->getSession()->getPage()->pressButton($this->t('Save'));
+    $this->getSession()->getPage()->pressButton('Save');
     $this->assertSession()->pageTextContains("Hello World!");
   }
 

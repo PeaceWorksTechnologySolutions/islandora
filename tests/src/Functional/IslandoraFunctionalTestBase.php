@@ -8,7 +8,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\link\LinkItemInterface;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
 use Drupal\Tests\TestFileCreationTrait;
 
@@ -17,7 +17,7 @@ use Drupal\Tests\TestFileCreationTrait;
  */
 class IslandoraFunctionalTestBase extends BrowserTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
   use TestFileCreationTrait;
   use MediaTypeCreationTrait;
   use StringTranslationTrait;
@@ -88,7 +88,7 @@ class IslandoraFunctionalTestBase extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
     // Delete the node rest config that's bootstrapped with Drupal.
@@ -306,7 +306,7 @@ EOD;
       ->getPage()
       ->findById("edit-reactions-$reaction_type-actions")
       ->selectOption($action_id);
-    $this->getSession()->getPage()->pressButton($this->t('Save and continue'));
+    $this->getSession()->getPage()->pressButton('Save and continue');
     $this->assertSession()->statusCodeEquals(200);
   }
 
@@ -314,7 +314,8 @@ EOD;
    * Create a new node by posting its add form.
    */
   protected function postNodeAddForm($bundle_id, $values, $button_text) {
-    $this->drupalPostForm("node/add/$bundle_id", $values, $this->t('@text', ['@text' => $button_text]));
+    $this->drupalGet("node/add/$bundle_id");
+    $this->submitForm($values, $button_text);
     $this->assertSession()->statusCodeEquals(200);
   }
 
@@ -322,7 +323,8 @@ EOD;
    * Create a new node by posting its add form.
    */
   protected function postTermAddForm($taxomony_id, $values, $button_text) {
-    $this->drupalPostForm("admin/structure/taxonomy/manage/$taxomony_id/add", $values, $this->t('@text', ['@text' => $button_text]));
+    $this->drupalGet("admin/structure/taxonomy/manage/$taxomony_id/add");
+    $this->submitForm($values, $button_text);
     $this->assertSession()->statusCodeEquals(200);
   }
 
@@ -330,7 +332,8 @@ EOD;
    * Edits a node by posting its edit form.
    */
   protected function postEntityEditForm($entity_url, $values, $button_text) {
-    $this->drupalPostForm("$entity_url/edit", $values, $this->t('@text', ['@text' => $button_text]));
+    $this->drupalGet("$entity_url/edit");
+    $this->submitForm($values, $button_text);
     $this->assertSession()->statusCodeEquals(200);
   }
 
@@ -435,8 +438,8 @@ EOD;
         'uri' => "public://test_file.txt",
         'filename' => "test_file.txt",
         'filemime' => "text/plain",
-        'status' => FILE_STATUS_PERMANENT,
       ]);
+    $file->setPermanent();
     $file->save();
 
     // Get the source field for the media.

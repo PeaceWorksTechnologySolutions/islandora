@@ -42,6 +42,8 @@ class IslandoraSettingsForm extends ConfigFormBase {
     'year',
   ];
   const GEMINI_PSEUDO_FIELD = 'field_gemini_uri';
+  const NODE_DELETE_MEDIA_AND_FILES = 'delete_media_and_files';
+  const REDIRECT_AFTER_MEDIA_SAVE = 'redirect_after_media_save';
 
   /**
    * To list the available bundle types.
@@ -127,6 +129,9 @@ class IslandoraSettingsForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => $this->t('URL'),
       '#default_value' => $config->get(self::BROKER_URL),
+      '#config' => [
+        'key' => 'islandora.settings:' . self::BROKER_URL,
+      ],
     ];
     $broker_user = $config->get(self::BROKER_USER);
     $form['broker_info']['provide_user_creds'] = [
@@ -147,6 +152,9 @@ class IslandoraSettingsForm extends ConfigFormBase {
           $state_selector => ['checked' => TRUE],
         ],
       ],
+      '#config' => [
+        'key' => 'islandora.settings:' . self::BROKER_USER,
+      ],
     ];
     $form['broker_info'][self::BROKER_PASSWORD] = [
       '#type' => 'password',
@@ -156,6 +164,10 @@ class IslandoraSettingsForm extends ConfigFormBase {
         'visible' => [
           $state_selector => ['checked' => TRUE],
         ],
+      ],
+      '#config' => [
+        'key' => 'islandora.settings:' . self::BROKER_PASSWORD,
+        'secret' => TRUE,
       ],
     ];
     $form[self::JWT_EXPIRY] = [
@@ -201,10 +213,29 @@ class IslandoraSettingsForm extends ConfigFormBase {
       $fedora_url = NULL;
     }
 
+    $form[self::NODE_DELETE_MEDIA_AND_FILES] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Node Delete with Media and Files'),
+      '#description' => $this->t('Adds a checkbox in the "Delete" tab of islandora objects to delete media and files associated with the object.'
+      ),
+      '#default_value' => (bool) $config->get(self::NODE_DELETE_MEDIA_AND_FILES),
+    ];
+
+    $form[self::REDIRECT_AFTER_MEDIA_SAVE] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Redirect after media save.'),
+      '#description' => $this->t('Redirect to node-specific media list after creation of media.'),
+      '#default_value' => (bool) $config->get(self::REDIRECT_AFTER_MEDIA_SAVE),
+    ];
+
     $form[self::FEDORA_URL] = [
       '#type' => 'textfield',
       '#title' => $this->t('Fedora URL'),
-      '#attributes' => ['readonly' => 'readonly'],
+      '#description' => $this->t('Read-only. This value is set in settings.php as the URL for the Fedora flysystem.'),
+      '#attributes' => [
+        'readonly' => 'readonly',
+        'disabled' => 'disabled',
+      ],
       '#default_value' => $fedora_url,
     ];
 
@@ -351,6 +382,8 @@ class IslandoraSettingsForm extends ConfigFormBase {
       ->set(self::UPLOAD_FORM_LOCATION, $form_state->getValue(self::UPLOAD_FORM_LOCATION))
       ->set(self::UPLOAD_FORM_ALLOWED_MIMETYPES, $form_state->getValue(self::UPLOAD_FORM_ALLOWED_MIMETYPES))
       ->set(self::GEMINI_PSEUDO, $new_pseudo_types)
+      ->set(self::NODE_DELETE_MEDIA_AND_FILES, $form_state->getValue(self::NODE_DELETE_MEDIA_AND_FILES))
+      ->set(self::REDIRECT_AFTER_MEDIA_SAVE, $form_state->getValue(self::REDIRECT_AFTER_MEDIA_SAVE))
       ->save();
 
     parent::submitForm($form, $form_state);

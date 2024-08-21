@@ -136,7 +136,7 @@ class MediaSourceController extends ControllerBase {
    * @param \Drupal\media\MediaTypeInterface $media_type
    *   Media type for new media.
    * @param \Drupal\taxonomy\TermInterface $taxonomy_term
-   *   Term from the 'Behavior' vocabulary to give to new media.
+   *   Term from the 'Media Use' vocabulary to give to new media.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The request object.
    *
@@ -280,8 +280,7 @@ class MediaSourceController extends ControllerBase {
    */
   public function attachToMediaAccess(AccountInterface $account, RouteMatch $route_match) {
     $media = $route_match->getParameter('media');
-    $node = $this->utils->getParentNode($media);
-    return AccessResult::allowedIf($node->access('update', $account) && $account->hasPermission('create media'));
+    return AccessResult::allowedIf($media->access('update', $account));
   }
 
 }
