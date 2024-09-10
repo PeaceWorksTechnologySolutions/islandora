@@ -63,7 +63,7 @@ class GenerateImageDerivativeFile extends AbstractGenerateDerivativeMediaFile {
     compatible with the destination image field.';
     $form['mimetype']['#type'] = 'hidden';
 
-    // adjust args title and description for better clarity
+    // Adjust args title and description for better clarity.
     $form['args']['#title'] = $this->t('Additional output arguments');
     $form['args']['#description'] = $this->t('Additional output options for ImageMagick convert (e.g. -resize 50% -unsharp 0x.5).<br>See <a target="_blank" href="https://imagemagick.org/script/convert.php">documentation</a> for available options.');
 
@@ -74,9 +74,10 @@ class GenerateImageDerivativeFile extends AbstractGenerateDerivativeMediaFile {
         '#default_value' => $this->configuration['inputargs'],
         '#rows' => '8',
         '#description' => $this->t('Additional input options for ImageMagick convert (e.g. -density 144).<br>Check the <a target="_blank" href="https://manpages.ubuntu.com/manpages/trusty/man1/convert.im6.1.html">man page</a> to see which options are input options.'),
-      ]
+      ],
     ];
     $form = $this->utils->array_insert_after($form, 'mimetype', $new);
+
     return $form;
   }
 
@@ -87,4 +88,5 @@ class GenerateImageDerivativeFile extends AbstractGenerateDerivativeMediaFile {
     parent::submitConfigurationForm($form, $form_state);
     $this->configuration['inputargs'] = $form_state->getValue('inputargs');
   }
+
 }
