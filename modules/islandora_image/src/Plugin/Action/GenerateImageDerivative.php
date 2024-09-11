@@ -48,7 +48,7 @@ class GenerateImageDerivative extends AbstractGenerateDerivative {
         '#description' => $this->t('Additional input options for ImageMagick convert (e.g. -density 144).<br>Check the <a target="_blank" href="https://manpages.ubuntu.com/manpages/trusty/man1/convert.im6.1.html">man page</a> to see which options are input options.'),
       ],
     ];
-    $form = $this->utils->array_insert_after($form, 'mimetype', $new);
+    $form = $this->utils->arrayInsertAfter($form, 'mimetype', $new);
     return $form;
   }
 
